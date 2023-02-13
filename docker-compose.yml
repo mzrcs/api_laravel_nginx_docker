@@ -1,0 +1,56 @@
+# docker-compose.yml
+version: "3.8"
+services:
+  nginx:
+    container_name: nginx
+    build: ./docker/nginx
+    command: nginx -g "daemon off;"
+    links:
+      - php
+    ports:
+      - "80:80"
+    volumes:
+      - ./logs/nginx:/var/log/nginx
+      - ./src/innoscriptatest:/var/www/html/innoscriptatest
+  php:
+    container_name: php
+    build: ./docker/php
+    environment:
+      NEWSAPI_API_URL: 'https://newsapi.org/v2'
+      NEWSAPI_KEY: bc364c6dde074367883a5456be340af0
+    ports:
+      - "9000:9000"
+    volumes:
+      - ./src/innoscriptatest:/var/www/html/innoscriptatest
+    working_dir: /var/www/html/innoscriptatest
+  composer:
+    container_name: composer
+    image: composer/composer
+    volumes:
+      - ./src/innoscriptatest:/var/www/html/innoscriptatest
+    working_dir: /var/www/html/innoscriptatest
+    command: install
+  mysql:
+    image: mysql:8.0.27
+    container_name: mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: 'innoscriptatest123!@#'
+      MYSQL_DATABASE: innoscriptatest
+      MYSQL_USER: innoscriptatest
+      MYSQL_PASSWORD: 'innoscriptatest123!@#'
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./database/mysql:/var/lib/mysql
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: pma
+    links:
+      - mysql
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+    restart: always
+    ports:
+      - 8085:80
